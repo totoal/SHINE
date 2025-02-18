@@ -389,7 +389,7 @@ def calc_xyarea(pstamp, tid):
     
 
 def cleaning(catalogue, labels_out, mindz=1, maxdz=200, minvox=1, minarea=1,
-             lminclean=None, lmaxclean=None):
+             lminclean=None, lmaxclean=None, datahead=None):
     
     #If error is raised, it means dz is not available, i.e. the data is 2D
     try:
@@ -400,7 +400,19 @@ def cleaning(catalogue, labels_out, mindz=1, maxdz=200, minvox=1, minarea=1,
       keep = (catalogue['Npix']>=np.nanmax([minvox, minarea]))
       naxis = 2
 
-    keep_lambda = (catalogue['Lambda'] >= lminclean) & (catalogue['Lambda'] <= lmaxclean)
+    if datahead is not None:
+        wcs = WCS(datahead)
+    else:
+       raise ValueError('Error: the datahead is not provided. It is necessary to clean the catalogue.')
+
+    try:
+        dlam = datahead['CD3_3']
+    except:
+        dlam = datahead['CDELT3'] 
+
+    wave = datahead['CRVAL3']+ np.arange(datahead['NAXIS3'])*dlam
+    Lambda = np.interp(catalogue['Zcent'], np.arange(len(wave)), wave)
+    keep_lambda = (Lambda >= lminclean) & (Lambda <= lmaxclean)
     keep = keep*keep_lambda
     
     remove = np.logical_not(keep)
@@ -625,8 +637,9 @@ def runextraction(data, vardata, mask2d=None, mask2dpost=None, fmask3D=None, ext
     #*********************************************************************************************
     #step 6: clean the catalogue and the labels map
     #*********************************************************************************************
-    catalogue, labels_cln = cleaning(catalogue, labels_out, mindz=mindz, maxdz=maxdz, minvox=minvox, \
-                                         minarea=minarea, lminclean=lminclean, lmaxclean=lmaxclean)
+    catalogue, labels_cln = cleaning(catalogue, labels_out, mindz=mindz, maxdz=maxdz, minvox=minvox,
+                                         minarea=minarea, lminclean=lminclean, lmaxclean=lmaxclean,
+                                         datahead=newhduhead)
 
     
     #*********************************************************************************************
