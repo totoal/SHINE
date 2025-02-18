@@ -388,7 +388,8 @@ def calc_xyarea(pstamp, tid):
     return np.sum((img==tid))
     
 
-def cleaning(catalogue, labels_out, mindz=1, maxdz=200, minvox=1, minarea=1):
+def cleaning(catalogue, labels_out, mindz=1, maxdz=200, minvox=1, minarea=1,
+             lminclean=None, lmaxclean=None):
     
     #If error is raised, it means dz is not available, i.e. the data is 2D
     try:
@@ -398,6 +399,9 @@ def cleaning(catalogue, labels_out, mindz=1, maxdz=200, minvox=1, minarea=1):
     except:
       keep = (catalogue['Npix']>=np.nanmax([minvox, minarea]))
       naxis = 2
+
+    keep_lambda = (catalogue['Lambda'] >= lminclean) & (catalogue['Lambda'] <= lmaxclean)
+    keep = keep*keep_lambda
     
     remove = np.logical_not(keep)
     removeids = catalogue['ID'][remove]
@@ -498,7 +502,8 @@ def compute_var(data):
 def runextraction(data, vardata, mask2d=None, mask2dpost=None, fmask3D=None, extdata=0, extvardata=0, \
                   snthreshold=2, maskspedge=0, spatsmooth=2, specsig=0, usefftconv=False, connectivity=26, \
                   mindz=1, maxdz=200, minvox = 1, minarea=1, zmin=None, zmax=None, lmin=None, lmax=None, outdir='./', \
-                  writelabels=False, writesmdata=False, writesmvar=False, writesmsnr=False, writesubcube=False, writevardata=False):
+                  writelabels=False, writesmdata=False, writesmvar=False, writesmsnr=False, writesubcube=False, writevardata=False,
+                  lminclean=None, lmaxclean=None):
 
     
     hducube      = fits.open(data)
@@ -621,7 +626,7 @@ def runextraction(data, vardata, mask2d=None, mask2dpost=None, fmask3D=None, ext
     #step 6: clean the catalogue and the labels map
     #*********************************************************************************************
     catalogue, labels_cln = cleaning(catalogue, labels_out, mindz=mindz, maxdz=maxdz, minvox=minvox, \
-                                         minarea=minarea)
+                                         minarea=minarea, lminclean=lminclean, lmaxclean=lmaxclean)
 
     
     #*********************************************************************************************
