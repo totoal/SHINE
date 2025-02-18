@@ -400,11 +400,6 @@ def cleaning(catalogue, labels_out, mindz=1, maxdz=200, minvox=1, minarea=1,
       keep = (catalogue['Npix']>=np.nanmax([minvox, minarea]))
       naxis = 2
 
-    if datahead is not None:
-        wcs = WCS(datahead)
-    else:
-       raise ValueError('Error: the datahead is not provided. It is necessary to clean the catalogue.')
-
     try:
         dlam = datahead['CD3_3']
     except:
